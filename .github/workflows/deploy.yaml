@@ -1,0 +1,116 @@
+on:
+  workflow_call:
+    inputs:
+      cloudflare-project:
+        description: Cloudflare project name
+        required: false
+        type: string
+
+      hugo-version:
+        description: Hugo framework version
+        default: 0.164.0
+        required: false
+        type: string
+
+      cache:
+        description: Cache resources
+        default: true
+        required: false
+        type: boolean
+
+    secrets:
+      CLOUDFLARE_API_TOKEN:
+        description: Cloudflare API token
+        required: false
+
+      CLOUDFLARE_ACCOUNT_ID:
+        description: Cloudflare account ID
+        required: false
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.workflow }}
+      url: ${{ steps.deploy.outputs.deployment-url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+        timeout-minutes: 5
+        background: true
+
+      - name: Restore cache
+        id: cache
+        if: inputs.cache
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            ${{ runner.temp }}/hugo.deb
+            ${{ runner.temp }}/hugo_cache
+            ./resources
+
+          key: ${{ github.workflow }}-${{ github.workflow_sha }}-${{ inputs.hugo-version }}-${{ github.ref }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ github.workflow }}-${{ github.workflow_sha }}-${{ inputs.hugo-version }}-${{ github.ref }}-
+            ${{ github.workflow }}-${{ github.workflow_sha }}-${{ inputs.hugo-version }}-
+
+        timeout-minutes: 5
+
+      - name: Install Hugo
+        run: >
+          [[ -f ${{ runner.temp }}/hugo.deb ]]
+          || wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${{ inputs.hugo-version }}/hugo_extended_${{ inputs.hugo-version }}_linux-amd64.deb
+          && sudo dpkg -i ${{ runner.temp }}/hugo.deb
+
+        timeout-minutes: 5
+
+      - name: Wait
+        wait-all:
+
+      - name: Build pages
+        run: >
+          hugo
+          --cacheDir ${{ runner.temp }}/hugo_cache
+          --enableGitInfo
+          --gc
+          --minify
+
+      - name: Deploy Cloudflare Workers
+        id: deploy
+        if: inputs.cloudflare-project
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./public --project-name=${{ inputs.cloudflare-project }}
+
+        timeout-minutes: 10
+        background: true
+
+      - name: Save cache
+        if: inputs.cache
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            ${{ runner.temp }}/hugo.deb
+            ${{ runner.temp }}/hugo_cache
+            ./resources
+
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+        timeout-minutes: 5
+
+    timeout-minutes: 30
