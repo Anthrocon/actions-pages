@@ -6,6 +6,12 @@ on:
         required: false
         type: string
 
+      cloudflare-project-create:
+        description: Cloudflare project creation
+        default: false
+        required: false
+        type: boolean
+
       hugo-version:
         description: Hugo framework version
         default: 0.164.0
@@ -19,12 +25,12 @@ on:
         type: boolean
 
     secrets:
-      CLOUDFLARE_API_TOKEN:
-        description: Cloudflare API token
-        required: false
-
       CLOUDFLARE_ACCOUNT_ID:
         description: Cloudflare account ID
+        required: false
+
+      CLOUDFLARE_API_TOKEN:
+        description: Cloudflare API token
         required: false
 
 defaults:
@@ -87,6 +93,16 @@ jobs:
           --enableGitInfo
           --gc
           --minify
+
+      - name: Create Cloudflare project
+        if: inputs.cloudflare-project-create
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages project create ${{ inputs.cloudflare-project }}
+
+        timeout-minutes: 5
 
       - name: Deploy Cloudflare Workers
         id: deploy
