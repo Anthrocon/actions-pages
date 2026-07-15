@@ -62,10 +62,10 @@ jobs:
             ${{ runner.temp }}/hugo_cache
             ./resources
 
-          key: ${{ github.workflow }}-${{ github.workflow_sha }}-${{ inputs.hugo-version }}-${{ github.ref }}-${{ github.run_id }}
+          key: ${{ job.workflow_repository }}-${{ job.workflow_sha }}-${{ inputs.hugo-version }}-${{ github.ref }}-${{ github.run_id }}
           restore-keys: |
-            ${{ github.workflow }}-${{ github.workflow_sha }}-${{ inputs.hugo-version }}-${{ github.ref }}-
-            ${{ github.workflow }}-${{ github.workflow_sha }}-${{ inputs.hugo-version }}-
+            ${{ job.workflow_repository }}-${{ job.workflow_sha }}-${{ inputs.hugo-version }}-${{ github.ref }}-
+            ${{ job.workflow_repository }}-${{ job.workflow_sha }}-${{ inputs.hugo-version }}-
 
         timeout-minutes: 5
 
