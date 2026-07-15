@@ -43,7 +43,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy
+    name: Anthrocon/actions-pages
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.workflow }}
@@ -100,7 +100,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages project create ${{ inputs.cloudflare-project }}
+          command: pages project create ${{ inputs.cloudflare-project }} --production-branch main
 
         timeout-minutes: 5
 
