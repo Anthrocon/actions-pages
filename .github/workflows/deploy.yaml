@@ -6,12 +6,6 @@ on:
         required: false
         type: string
 
-      cloudflare-project-create:
-        description: Cloudflare project creation
-        default: false
-        required: false
-        type: boolean
-
       hugo-version:
         description: Hugo framework version
         default: 0.164.0
@@ -32,6 +26,9 @@ on:
       CLOUDFLARE_API_TOKEN:
         description: Cloudflare API token
         required: false
+
+env:
+  VERSION: v1.0
 
 defaults:
   run:
@@ -68,10 +65,10 @@ jobs:
             ${{ runner.temp }}/hugo_cache
             ./resources
 
-          key: ${{ job.workflow_repository }}-${{ job.workflow_sha }}-${{ inputs.hugo-version }}-${{ github.ref }}-${{ github.run_id }}
+          key: ${{ github.workflow }}-${{ env.VERSION }}-${{ inputs.hugo-version }}-${{ github.ref }}-${{ github.run_id }}
           restore-keys: |
-            ${{ job.workflow_repository }}-${{ job.workflow_sha }}-${{ inputs.hugo-version }}-${{ github.ref }}-
-            ${{ job.workflow_repository }}-${{ job.workflow_sha }}-${{ inputs.hugo-version }}-
+            ${{ github.workflow }}-${{ env.VERSION }}-${{ inputs.hugo-version }}-${{ github.ref }}-
+            ${{ github.workflow }}-${{ env.VERSION }}-${{ inputs.hugo-version }}-
 
         timeout-minutes: 5
 
@@ -93,16 +90,6 @@ jobs:
           --enableGitInfo
           --gc
           --minify
-
-      - name: Create Cloudflare project
-        if: inputs.cloudflare-project-create
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages project create ${{ inputs.cloudflare-project }} --production-branch main
-
-        timeout-minutes: 5
 
       - name: Deploy Cloudflare Workers
         id: deploy
@@ -128,5 +115,8 @@ jobs:
           key: ${{ steps.cache.outputs.cache-primary-key }}
 
         timeout-minutes: 5
+
+      - name: Wait
+        wait-all:
 
     timeout-minutes: 30
