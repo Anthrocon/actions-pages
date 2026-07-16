@@ -1,5 +1,7 @@
 # actions-pages
 
+[![Unit test](https://github.com/Anthrocon/actions-pages/actions/workflows/test.yaml/badge.svg)](https://github.com/Anthrocon/actions-pages/actions/workflows/test.yaml)
+
 Action generates Hugo production and preview pages, then deploys to Cloudflare Workers.
 
 ## Scope

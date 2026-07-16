@@ -2,7 +2,7 @@ on:
   workflow_call:
     inputs:
       cloudflare-project:
-        description: Cloudflare project name
+        description: Cloudflare Workers project name
         required: false
         type: string
 
@@ -24,7 +24,7 @@ on:
         required: false
 
       CLOUDFLARE_API_TOKEN:
-        description: Cloudflare API token
+        description: Cloudflare account API token
         required: false
 
 env:
@@ -65,7 +65,7 @@ jobs:
             ${{ runner.temp }}/hugo_cache
             ./resources
 
-          key: ${{ github.workflow }}-${{ env.VERSION }}-${{ inputs.hugo-version }}-${{ github.ref }}-${{ github.run_id }}
+          key: ${{ github.workflow }}-${{ env.VERSION }}-${{ inputs.hugo-version }}-${{ github.ref }}-${{ github.sha }}
           restore-keys: |
             ${{ github.workflow }}-${{ env.VERSION }}-${{ inputs.hugo-version }}-${{ github.ref }}-
             ${{ github.workflow }}-${{ env.VERSION }}-${{ inputs.hugo-version }}-
@@ -116,8 +116,8 @@ jobs:
 
         timeout-minutes: 10
 
-      - name: Summary
-        if: ${{ steps.deploy.outputs.pages-deployment-id }}
+      - name: Summarize
+        if: steps.deploy.outputs.pages-deployment-id
         run: |
           echo "# :white_check_mark: Deploy to Cloudflare Workers" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
