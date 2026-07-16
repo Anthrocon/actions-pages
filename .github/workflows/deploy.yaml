@@ -91,18 +91,6 @@ jobs:
           --gc
           --minify
 
-      - name: Deploy Cloudflare Workers
-        id: deploy
-        if: inputs.cloudflare-project
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy ./public --project-name=${{ inputs.cloudflare-project }}
-
-        timeout-minutes: 10
-        background: true
-
       - name: Save cache
         if: inputs.cache
         uses: actions/cache/save@v6
@@ -115,9 +103,18 @@ jobs:
           key: ${{ steps.cache.outputs.cache-primary-key }}
 
         timeout-minutes: 5
+        background: true
 
-      - name: Wait
-        wait-all:
+      - name: Deploy Cloudflare Workers
+        id: deploy
+        if: inputs.cloudflare-project
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ./public --project-name=${{ inputs.cloudflare-project }}
+
+        timeout-minutes: 10
 
       - name: Summary
         if: ${{ steps.deploy.outputs.pages-deployment-id }}
@@ -130,5 +127,8 @@ jobs:
           echo "| Branch URL | ${{ steps.deploy.outputs.pages-deployment-alias-url }} |" >> $GITHUB_STEP_SUMMARY
 
         timeout-minutes: 1
+
+      - name: Wait
+        wait-all:
 
     timeout-minutes: 30
