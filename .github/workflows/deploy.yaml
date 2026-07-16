@@ -115,7 +115,9 @@ jobs:
           key: ${{ steps.cache.outputs.cache-primary-key }}
 
         timeout-minutes: 5
-        background: true
+
+      - name: Wait
+        wait-all:
 
       - name: Summary
         if: ${{ steps.deploy.outputs.pages-deployment-id }}
@@ -128,8 +130,5 @@ jobs:
           echo "| Branch URL | ${{ steps.deploy.outputs.pages-deployment-alias-url }} |" >> $GITHUB_STEP_SUMMARY
 
         timeout-minutes: 1
-
-      - name: Wait
-        wait-all:
 
     timeout-minutes: 30
