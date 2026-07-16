@@ -115,6 +115,19 @@ jobs:
           key: ${{ steps.cache.outputs.cache-primary-key }}
 
         timeout-minutes: 5
+        background: true
+
+      - name: Summary
+        if: ${{ steps.deploy.outputs.pages-deployment-id }}
+        run: |
+          echo "# :white_check_mark: Deploy to Cloudflare Workers" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Deployment ID | ${{ steps.deploy.outputs.pages-deployment-id }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| --- | --- |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit URL | ${{ steps.deploy.outputs.deployment-url }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch URL | ${{ steps.deploy.outputs.pages-deployment-alias-url }} |" >> $GITHUB_STEP_SUMMARY
+
+        timeout-minutes: 1
 
       - name: Wait
         wait-all:
